@@ -1,1 +1,177 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
+#讀取檔案
+train_df=pd.read_csv('train.csv')
+test_df=pd.read_csv('test.csv')
+gender_df=pd.read_csv('gender_submission.csv')
+
+#檢查有哪些缺失值
+#.isnull():檢查是否空格
+print("=== 補值前 train_df 缺失值 ===")
+print(train_df.isnull().sum())
+print("\n=== 補值前 test_df 缺失值 ===")
+print(test_df.isnull().sum())
+
+#補缺漏值，使用中位數、平均數、眾數
+#.fillna()：補缺失值
+# inplace=True:修改原有資料
+train_df.fillna({'Age':train_df['Age'].median(),
+                'Embarked':train_df['Embarked'].mode()[0]},inplace=True)
+test_df.fillna({'Age': test_df['Age'].median(),
+                'Fare': test_df['Fare'].mean()},inplace=True)
+
+#cabin缺漏值太多，刪除此資料
+#train_df.drop()：刪除欄位或列
+#axis=1:指定刪除欄位（axis=0 表示刪除列）
+train_df.drop('Cabin',axis=1,inplace=True)
+test_df.drop('Cabin',axis=1,inplace=True)
+
+#再次檢查是否還有缺失值
+print("=== train_df 缺值 ===")
+print(train_df.isnull().values.any())
+
+print("=== test_df 缺值 ===")
+print(test_df.isnull().sum())
+
+#生還者與死亡分佈
+survived_counts = train_df['Survived'].value_counts()
+
+#繪製圓餅圖
+survived_counts.plot.pie(autopct='%1.1f%%', startangle=90, labels=["Dead", "Survived"], colors=sns.color_palette("Blues", 2))
+plt.title('Survival Distribution')
+plt.ylabel('')  # 去掉 y 軸標籤
+plt.show()
+
+#計算性別和生存率
+sex_survival=train_df.groupby('Sex')['Survived'].mean().reset_index()
+
+#指定顏色
+colors=['lightblue' if sex == 'male' else 'lightpink' for sex in sex_survival['Sex']]
+
+#使用seaborn繪製長條圖
+sns.barplot(x='Sex', y='Survived', data=sex_survival, palette=colors)
+plt.title('Survival Rate by Sex', fontsize=14, fontweight='bold')
+plt.xlabel('Sex', fontsize=12)
+plt.ylabel('Survival Rate', fontsize=12)
+plt.ylim(0, 1)  # 生存率範圍 0-1
+plt.tight_layout() #自動調整圖表的版面配置，避免重疊
+plt.show()
+
+#年齡分組
+bins = [0, 10, 20, 30, 40, 50, 60, 70, 80]
+labels = ['0-10', '11-21','21-30', '31-40', '41-50', '51-60', '61-70','71-80']
+train_df['AgeGroup'] = pd.cut(train_df['Age'], bins=bins, labels=labels, right=False)
+
+#計算年齡和生存率
+age_survival=train_df.groupby('AgeGroup')['Survived'].mean().reset_index()
+
+plt.figure(figsize=(8, 5))
+sns.barplot(x='AgeGroup', y='Survived', data=age_survival, palette='Blues')
+plt.title('Survival Rate by Age Group')
+plt.ylabel('Survival Rate')
+plt.xlabel('Age Group')
+plt.ylim(0, 1) 
+plt.tight_layout() 
+plt.show()
+
+#計算艙等和生存率
+pclass_survival=train_df.groupby('Pclass')['Survived'].mean().reset_index()
+
+plt.figure(figsize=(6, 4))
+sns.barplot(x='Pclass', y='Survived', data=pclass_survival, palette='pastel')
+
+plt.title('Survival Rate by PClass')
+plt.xlabel('Passenger Class')
+plt.ylabel('Survival Rate')
+plt.ylim(0, 1)
+plt.tight_layout()
+plt.show()
+
+#建立票價分組
+train_df['FareGroup'] = pd.cut(train_df['Fare'], bins=[0, 10, 30, 100, 600], 
+                               labels=['0-10', '10-30', '30-100', '100+'])
+
+#計算票價和生存率
+fare_survival=train_df.groupby('FareGroup')['Survived'].mean().reset_index()
+
+sns.barplot (x='FareGroup', y='Survived', data=fare_survival, palette ='Greens')
+plt.title('Survival Rate by Fare Group')
+plt.ylabel('Fare')
+plt.ylim(0, 1) 
+plt.tight_layout() 
+plt.show()
+
+
+#資料前處理(挑選較有關的特徵)
+#features:建立新清單
+features = ['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Embarked']
+X = train_df[features]
+y = train_df['Survived']
+
+
+#處理類別變數（將文字轉換為數字）
+#pd.get_dummies():將類別變數轉換成0或1
+#drop_first=True：避免多重共線性問題
+X = pd.get_dummies(X, columns=['Sex', 'Embarked'], drop_first=True)
+
+# 處理缺失值
+X['Age'].fillna(X['Age'].median(), inplace=True)
+X['Fare'].fillna(X['Fare'].median(), inplace=True)
+
+# 保存特徵欄位名稱，用於測試資料對齊
+X_columns = X.columns
+
+#sklearn:切分訓練與測試資料（20%的驗證，80%的訓練）
+#train_test_split：隨機將資料集分成兩部分
+from sklearn.model_selection import train_test_split
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+
+#訓練模型
+#LogisticRegression:邏輯回歸模型
+#max_iter=1000：讓模型跑1000次
+from sklearn.linear_model import LogisticRegression
+model = LogisticRegression(max_iter=1000)  # max_iter 提高是為了避免收斂問題
+model.fit(X_train, y_train)
+
+#模型評估
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+y_pred = model.predict(X_val)
+print("準確率 (Accuracy):", accuracy_score(y_val, y_pred))
+print("混淆矩陣:")
+print(confusion_matrix(y_val, y_pred))
+print("分類報告:")
+print(classification_report(y_val, y_pred))
+
+#處理測試資料
+test_df = pd.read_csv("test.csv")
+
+#與訓練集相同欄位
+test_X = test_df[features]
+
+# 類別變數轉換
+test_X = pd.get_dummies(test_X, columns=['Sex', 'Embarked'], drop_first=True)
+
+# 缺失值補齊（用訓練集中位數）
+test_X['Age'].fillna(X['Age'].median(), inplace=True)
+test_X['Fare'].fillna(X['Fare'].median(), inplace=True)
+
+# 補齊缺少的欄位，確保 test_df欄位與 X 完全一致
+for col in X.columns:
+    if col not in test_X.columns:
+        test_X[col] = 0
+
+# 確保欄位順序一致
+test_X = test_X[X.columns]
+
+# 用模型預測測試資料
+test_predictions = model.predict(test_X)
+
+# 儲存結果
+submission = pd.DataFrame({
+    'PassengerId': test_df['PassengerId'],
+    'Survived': test_predictions
+})
+submission.to_csv('titanic_submission.csv', index=False)
