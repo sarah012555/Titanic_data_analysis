@@ -45,6 +45,8 @@ plt.ylabel('')  # 去掉 y 軸標籤
 plt.show()
 
 #計算性別和生存率
+#.groupby()：將數據進行分組
+#.reset_index():恢復索引，將sex列恢復普通列
 sex_survival=train_df.groupby('Sex')['Survived'].mean().reset_index()
 
 #指定顏色
@@ -112,7 +114,7 @@ y = train_df['Survived']
 
 
 #處理類別變數（將文字轉換為數字）
-#pd.get_dummies():將類別變數轉換成0或1
+#.get_dummies():將類別變數轉換成0或1
 #drop_first=True：避免多重共線性問題
 X = pd.get_dummies(X, columns=['Sex', 'Embarked'], drop_first=True)
 
@@ -123,7 +125,7 @@ X['Fare'].fillna(X['Fare'].median(), inplace=True)
 # 保存特徵欄位名稱，用於測試資料對齊
 X_columns = X.columns
 
-#sklearn:切分訓練與測試資料（20%的驗證，80%的訓練）
+#sklearn:切分成訓練集與測試集（20%的驗證，80%的訓練）
 #train_test_split：隨機將資料集分成兩部分
 from sklearn.model_selection import train_test_split
 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -139,7 +141,7 @@ model.fit(X_train, y_train)
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
 y_pred = model.predict(X_val)
-print("準確率 (Accuracy):", accuracy_score(y_val, y_pred))
+print("準確率 (Accuracy):", accuracy_score(y_val, y_pred))＃(y_val, y_pred):實際值與預測值
 print("混淆矩陣:")
 print(confusion_matrix(y_val, y_pred))
 print("分類報告:")
@@ -151,10 +153,10 @@ test_df = pd.read_csv("test.csv")
 #與訓練集相同欄位
 test_X = test_df[features]
 
-# 類別變數轉換
+#類別變數轉換
 test_X = pd.get_dummies(test_X, columns=['Sex', 'Embarked'], drop_first=True)
 
-# 缺失值補齊（用訓練集中位數）
+# 缺失值補齊
 test_X['Age'].fillna(X['Age'].median(), inplace=True)
 test_X['Fare'].fillna(X['Fare'].median(), inplace=True)
 
