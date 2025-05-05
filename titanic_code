@@ -23,7 +23,7 @@ test_df.fillna({'Age': test_df['Age'].median(),
                 'Fare': test_df['Fare'].mean()},inplace=True)
 
 #cabin缺漏值太多，刪除此資料
-#train_df.drop()：刪除欄位或列
+#.drop()：刪除欄位或列
 #axis=1:指定刪除欄位（axis=0 表示刪除列）
 train_df.drop('Cabin',axis=1,inplace=True)
 test_df.drop('Cabin',axis=1,inplace=True)
