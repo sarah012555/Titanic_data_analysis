@@ -131,11 +131,17 @@ from sklearn.model_selection import train_test_split
 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
 
 #訓練模型
-#LogisticRegression:邏輯回歸模型
+#1.LogisticRegression:邏輯回歸模型
 #max_iter=1000：讓模型跑1000次
 from sklearn.linear_model import LogisticRegression
 model = LogisticRegression(max_iter=1000)  # max_iter 提高是為了避免收斂問題
 model.fit(X_train, y_train)
+
+#2.RandomForestClassifier:隨機森林，適合非線性資料
+from sklearn.ensemble import RandomForestClassifier
+model = RandomForestClassifier(n_estimators=100, random_state=42) 
+model.fit(X_train, y_train)
+#準確率隨機森林較高，但邏輯回歸較適合分析該數據
 
 #模型評估
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
