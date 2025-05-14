@@ -54,17 +54,16 @@ colors=['lightblue' if sex == 'male' else 'lightpink' for sex in sex_survival['S
 
 #使用seaborn繪製長條圖
 sns.barplot(x='Sex', y='Survived', data=sex_survival, palette=colors)
-plt.title('Survival Rate by Sex', fontsize=14, fontweight='bold')
+plt.title('Survival Rate by Sex', fontsize=14, fontweight='bold')#fontweight:字體粗體
 plt.xlabel('Sex', fontsize=12)
 plt.ylabel('Survival Rate', fontsize=12)
-plt.ylim(0, 1)  # 生存率範圍 0-1
+plt.ylim(0, 1)  # y軸範圍：0-1
 plt.tight_layout() #自動調整圖表的版面配置，避免重疊
 plt.show()
 
 #年齡分組
-bins = [0, 10, 20, 30, 40, 50, 60, 70, 80]
-labels = ['0-10', '11-21','21-30', '31-40', '41-50', '51-60', '61-70','71-80']
-train_df['AgeGroup'] = pd.cut(train_df['Age'], bins=bins, labels=labels, right=False)
+train_df['AgeGroup'] = pd.cut(train_df['Age'], bins=[0, 10, 20, 30, 40, 50, 60, 70, 80], 
+                           labels=['0-10', '11-21','21-30', '31-40', '41-50', '51-60', '61-70','71-80'], right=False)
 
 #計算年齡和生存率
 age_survival=train_df.groupby('AgeGroup')['Survived'].mean().reset_index()
