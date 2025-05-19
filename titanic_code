@@ -1,8 +1,10 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+#將資料集切成訓練集和驗證集的工具
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
+#模型評估指標函數
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
 #讀取檔案
@@ -21,7 +23,7 @@ print(test_df.isnull().sum())
 #.fillna()：補缺失值
 # inplace=True:修改原有資料
 train_df.fillna({'Age':train_df['Age'].median(),
-                'Embarked':train_df['Embarked'].mode()[0],'Cabin':'U'},inplace=True)
+                'Embarked':train_df['Embarked'].mode()[0],'Cabin':'U'},inplace=True)#缺失的艙位用'U'表示未知
 test_df.fillna({'Age': test_df['Age'].median(),
                 'Fare': test_df['Fare'].mean(),'Cabin':'U'},inplace=True)
 
