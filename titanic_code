@@ -1,11 +1,14 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
 #讀取檔案
 train_df=pd.read_csv('train.csv')
 test_df=pd.read_csv('test.csv')
-gender_df=pd.read_csv('gender_submission.csv')
+
 
 #檢查缺失值
 #.isnull():檢查是否空格
@@ -18,15 +21,10 @@ print(test_df.isnull().sum())
 #.fillna()：補缺失值
 # inplace=True:修改原有資料
 train_df.fillna({'Age':train_df['Age'].median(),
-                'Embarked':train_df['Embarked'].mode()[0]},inplace=True)
+                'Embarked':train_df['Embarked'].mode()[0],'Cabin':'U'},inplace=True)
 test_df.fillna({'Age': test_df['Age'].median(),
-                'Fare': test_df['Fare'].mean()},inplace=True)
+                'Fare': test_df['Fare'].mean(),'Cabin':'U'},inplace=True)
 
-#cabin缺漏值太多，刪除此資料
-#.drop()：刪除欄位或列
-#axis=1:指定刪除欄位（axis=0 表示刪除列）
-train_df.drop('Cabin',axis=1,inplace=True)
-test_df.drop('Cabin',axis=1,inplace=True)
 
 #再次檢查是否還有缺失值
 print("=== train_df 缺值 ===")
@@ -104,66 +102,73 @@ plt.ylim(0, 1)
 plt.tight_layout() 
 plt.show()
 
+#特徵工程
+# 從姓名中提取稱謂 (Mr, Miss, etc.)
+for dataset in [train_df, test_df]:
+    dataset['Title'] = dataset['Name'].str.extract(' ([A-Za-z]+)\.', expand=False)
+# 將罕見的稱謂合併成一類
+    dataset['Title'] = dataset['Title'].replace(['Lady', 'Countess','Capt', 'Col', 
+                                                  'Don', 'Dr', 'Major', 'Rev', 'Sir', 
+                                                  'Jonkheer', 'Dona'], 'Rare')
+    dataset['Title'] = dataset['Title'].replace({'Mlle': 'Miss', 'Ms': 'Miss', 'Mme': 'Mrs'})
+# 將 Title 轉換為數值類別
+    dataset['Title']=dataset['Title'].map ({'Mr': 1, 'Miss': 2, 'Mrs': 3, 'Master': 4, 'Rare': 5})
+    dataset['Title'] = dataset['Title'].fillna(0)  # 防止有缺漏
 
+#IsAlone 變數
+for dataset in [train_df, test_df]:
+    dataset['FamilySize'] = dataset['SibSp'] + dataset['Parch']
+    dataset['IsAlone'] = 0
+    dataset.loc[dataset['FamilySize'] == 0, 'IsAlone'] = 1
+
+# Fare分組
+train_df['FareBand'] = pd.qcut(train_df['Fare'], 4, labels=[0, 1, 2, 3])
+fare_bins=pd.qcut(train_df['Fare'],4,retbins=True)[1]
+test_df['FareBand'] = pd.cut(test_df['Fare'], bins=fare_bins, labels=False,include_lowest=True)
+
+# 將 FareBand 當作新變數使用
+train_df['FareBand'] = train_df['FareBand'].astype(int)
+test_df['FareBand'] = test_df['FareBand'].astype(int)
+
+#建立訓練集資料與標籤
 #資料前處理(挑選較有關的特徵)
 #features:建立新清單
-features = ['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Embarked']
+features = ['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Embarked','Title','IsAlone','FareBand']
 X = train_df[features]
 y = train_df['Survived']
 
 
 #處理類別變數（將文字轉換為數字）
-#.get_dummies():將類別變數轉換成0或1
+#pd.get_dummies():將類別變數轉換成0或1
 #drop_first=True：避免多重共線性問題
 X = pd.get_dummies(X, columns=['Sex', 'Embarked'], drop_first=True)
 
-# 處理缺失值
-X['Age'].fillna(X['Age'].median(), inplace=True)
-X['Fare'].fillna(X['Fare'].median(), inplace=True)
 
-# 保存特徵欄位名稱，用於測試資料對齊
-X_columns = X.columns
-
-#sklearn:切分成訓練集與測試集（20%的驗證，80%的訓練）
+#切分資料與訓練模型
+#sklearn:切分訓練與測試資料（20%的驗證，80%的訓練）
 #train_test_split：隨機將資料集分成兩部分
-from sklearn.model_selection import train_test_split
 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
 
 #訓練模型
-#1.LogisticRegression:邏輯回歸模型
+#LogisticRegression:邏輯回歸模型
 #max_iter=1000：讓模型跑1000次
-from sklearn.linear_model import LogisticRegression
 model = LogisticRegression(max_iter=1000)  # max_iter 提高是為了避免收斂問題
-model.fit(X_train, y_train)
-#此題目選擇LogisticRegression
-
-#2.RandomForestClassifier:隨機森林，適合非線性資料
-from sklearn.ensemble import RandomForestClassifier
-model = RandomForestClassifier(n_estimators=100, random_state=42) 
 model.fit(X_train, y_train)
 
 #模型評估
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
-
 y_pred = model.predict(X_val)
-print("準確率 (Accuracy):", accuracy_score(y_val, y_pred))＃(y_val, y_pred):實際值與預測值
+print("準確率 (Accuracy):", accuracy_score(y_val, y_pred))
 print("混淆矩陣:")
 print(confusion_matrix(y_val, y_pred))
 print("分類報告:")
 print(classification_report(y_val, y_pred))
 
-#處理測試資料
-test_df = pd.read_csv("test.csv")
-
-#與訓練集相同欄位
+#測試集特徵處理（與訓練集相同）
 test_X = test_df[features]
-
-#類別變數轉換
 test_X = pd.get_dummies(test_X, columns=['Sex', 'Embarked'], drop_first=True)
 
-# 缺失值補齊
+# 缺失值補齊（用訓練集中位數）
 test_X['Age'].fillna(X['Age'].median(), inplace=True)
-test_X['Fare'].fillna(X['Fare'].median(), inplace=True)
 
 # 補齊缺少的欄位，確保 test_df欄位與 X 完全一致
 for col in X.columns:
@@ -176,9 +181,17 @@ test_X = test_X[X.columns]
 # 用模型預測測試資料
 test_predictions = model.predict(test_X)
 
-# 儲存結果
+# 產出提交檔與儲存結果
 submission = pd.DataFrame({
     'PassengerId': test_df['PassengerId'],
     'Survived': test_predictions
 })
-submission.to_csv('titanic_submission.csv', index=False)
+submission.to_csv('titanic_submission2.csv', index=False)
+
+
+
+
+
+
+
+
