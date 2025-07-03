@@ -1,4 +1,4 @@
-#Titanic 生存預測分析（Kaggle）
+# Titanic 生存預測分析（Kaggle）
 
 本專案為參與 Kaggle Titanic 生存預測競賽之實作練習，目的為預測乘客是否生還。整體流程包含資料清理、缺失值處理、特徵工程、模型訓練與預測評估。
 
@@ -16,5 +16,5 @@
 - 最終提交 Kaggle 分數為 **0.7751**
 - 模型為 Logistic Regression
 - 成功進入前 25% 排名
-
-👉 [我的 Kaggle 參賽頁面連結（如有）]
+- 
+[我的 Kaggle 參賽頁面連結 https://www.kaggle.com/competitions/titanic/leaderboard]
