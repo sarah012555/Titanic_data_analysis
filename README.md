@@ -12,7 +12,7 @@
 3. 建立模型（Logistic Regression）
 4. 模型評估與提交結果
 
-## 資料視覺化（Exploratory Data Analysis）
+## 資料視覺化
 
 ### 年齡分布
 
