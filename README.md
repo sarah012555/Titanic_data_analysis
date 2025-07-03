@@ -12,6 +12,12 @@
 3. 建立模型（Logistic Regression）
 4. 模型評估與提交結果
 
+## 資料視覺化（Exploratory Data Analysis）
+
+### 年齡分布
+
+
+
 ## 成果
 - 最終提交 Kaggle 分數為 **0.7751**
 - 模型為 Logistic Regression
