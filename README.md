@@ -4,7 +4,6 @@
 
 ## 使用工具
 - Python (Pandas, Seaborn, Matplotlib, Sklearn)
-- Jupyter Notebook
 
 ## 分析步驟
 1. 資料前處理（缺失值補齊、特徵轉換）
@@ -14,11 +13,17 @@
 
 ## 資料視覺化
 
-### 生還與死亡率
-![](images/生還與死亡率.png)
+### 生存與死亡率
+![](images/生存與死亡率.png)
 
+### 生存率 vs 性別
+![](images/性別生存率.png)
 
+### 生存率 vs 年齡
+![](images/年齡生存率.png)
 
+### 生存率 vs 艙等
+![](images/艙等生存率.png)
 
 
 ## 成果
