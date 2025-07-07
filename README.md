@@ -34,7 +34,7 @@
 - 模型為 Logistic Regression
 - 成功進入前 25% 排名
 
-[我的 Kaggle 參賽頁面連結 (https://www.kaggle.com/competitions/titanic/leaderboard))]
+[我的 Kaggle 參賽頁面連結 (https://www.kaggle.com/competitions/titanic/leaderboard)]
 
 ![](images/titanic_score.png)
 
