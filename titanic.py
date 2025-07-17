@@ -30,7 +30,7 @@ test_df.fillna({'Age': test_df['Age'].median(),
 
 #再次檢查是否還有缺失值
 print("=== train_df 缺值 ===")
-print(train_df.isnull().values.any())
+print(train_df.isnull().sum())
 
 print("=== test_df 缺值 ===")
 print(test_df.isnull().sum())
